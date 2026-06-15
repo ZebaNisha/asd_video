@@ -1,0 +1,9 @@
+Total videos in dataset: 19360
+Videos selected this run: 19360
+Videos processed: 10192
+Videos skipped: 8954
+Videos failed: 214
+Accepted child sequences: 19131
+Rejected child sequences: 15
+Total feature rows: 19131
+Total labeled rows: 19131

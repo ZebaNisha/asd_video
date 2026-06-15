@@ -1,0 +1,19 @@
+# Ignore processed videos and large outputs
+outputs/
+# Ignore dataset files
+features.csv
+dataset_stats.json
+# Ignore raw video data
+autism_data_anonymized/
+# Ignore model checkpoints
+models/
+# Ignore logs
+logs/
+# Ignore temporary files
+*.tmp
+*.log
+# Ignore large media files
+*.mp4
+*.avi
+*.mov
+*.mkv
