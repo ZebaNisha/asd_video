@@ -279,7 +279,7 @@ Mean FPS (unweighted over videos): **{sum(float(k) * v for k, v in fps.items()) 
 | Category | Count | Notes |
 |----------|------:|-------|
 | **Corrupted videos** | {corr['count']:,} | Cannot open, zero frames, or unreadable samples |
-| **Videos without child** | {no_child['count']:,} | No face detected in sampled frame (MediaPipe) |
+| **Videos without child** | {no_child['count']:,} | No child detected by the sampled-frame heuristic |
 | **Videos with only examiner** | {examiner['count']:,} | Exactly one face in sampled frame (heuristic) |
 | **Videos with missing motion** | {motion['count']:,} | Mean frame diff < {motion['threshold']} |
 
@@ -327,7 +327,7 @@ Mean FPS (unweighted over videos): **{sum(float(k) * v for k, v in fps.items()) 
 
 - **Corrupted:** OpenCV cannot open the file, reports zero frames, or cannot decode any sampled frame.
 - **Missing motion:** Mean absolute grayscale difference between consecutive motion samples < threshold.
-- **Without child / only examiner:** MediaPipe face detection on one mid-clip frame; these are automated heuristics, not manual ADOS labels. Clips with occluded faces or multiple people may be misclassified.
+- **Without child / only examiner:** Sampled-frame heuristics; these are automated checks, not manual ADOS labels. Clips with occlusion or multiple people may be misclassified.
 
 Full path lists: `dataset_stats.json`.
 """

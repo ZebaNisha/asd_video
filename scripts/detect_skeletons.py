@@ -5,11 +5,10 @@ Skeleton detection and bounding‑box annotation script.
 Usage:
     python detect_skeletons.py --input path/to/video.mp4 [--output path/to/output.mp4]
 
-The script reads the video with OpenCV, extracts pose landmarks using MediaPipe,
-computes a tight bounding box around each detected skeleton, draws the boxes
-(and optional IDs) on each frame, saves an annotated video, and also displays the
-video in a window. Both saving and live display are performed as per user
-preference.
+The script reads an OpenPose-style stickman video with OpenCV, detects skeleton
+blobs by thresholding the rendered lines, computes a tight bounding box around
+each detected skeleton, draws the boxes on each frame, and saves an annotated
+video.
 """
 
 import argparse

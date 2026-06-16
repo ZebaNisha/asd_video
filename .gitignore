@@ -12,8 +12,17 @@ logs/
 # Ignore temporary files
 *.tmp
 *.log
+__pycache__/
+*.pyc
 # Ignore large media files
 *.mp4
 *.avi
 *.mov
 *.mkv
+*.task
+
+# Ignore reports and predictions
+reports/
+subject_predictions.csv
+scripts/debug.csv
+scripts/debug_test.csv
