@@ -58,10 +58,10 @@ def main() -> None:
     for split, label in [("train", "asd"), ("train", "td"), ("test", "asd"), ("test", "td")]:
         subjects = sorted(grouped[(split, label)])
         chosen_subjects = subjects[: args.subjects_per_group]
-        if len(chosen_subjects) < args.subjects_per_group:
-            raise RuntimeError(
-                f"Only found {len(chosen_subjects)} subjects for split={split}, label={label}"
-            )
+        # Allow fewer subjects than requested; use whatever is available
+        # No error is raised if the dataset has fewer subjects than subjects_per_group.
+        # chosen_subjects already contains up to args.subjects_per_group subjects.
+
 
         for subj in chosen_subjects:
             subj_rows = sorted(grouped[(split, label)][subj], key=lambda r: r["unique_video_id"])

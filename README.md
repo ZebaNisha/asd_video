@@ -52,3 +52,11 @@ F1-score:  0.7679
 
 The report is saved at:
 `outputs/vgg16_lstm/subset_2subjects_30videos/child_vgg16_lstm_report.json`
+## VGG16 Feature Extraction & Bidirectional LSTM
+
+The pipeline extracts deep visual features from child‑only crops using a **pre‑trained VGG16** network (weights frozen). These 4096‑dimensional features are then fed into a **bidirectional LSTM** classifier that predicts ASD vs. TD.
+
+- **Stage 1** (absolute features) achieved ~54.7 % training accuracy.
+- **Stage 2** (scale‑invariant features) achieved **≈ 60 %** training accuracy (see `scripts/train_accuracy_stage2.py`).
+
+The `train_accuracy_stage2.py` script computes this metric on the training split and prints the result.

@@ -159,7 +159,10 @@ def main() -> None:
         return
 
     model, preprocess_input = load_vgg16()
+    print("VGG16 model loaded successfully.")
     rows = read_metadata(Path(args.metadata))
+    total_videos = len(rows)
+    print(f"Loaded metadata with {total_videos} videos to process.")
     child_seq_dir = Path(args.child_seq_dir)
 
     by_split = {
@@ -168,7 +171,9 @@ def main() -> None:
     }
     report_rows = []
 
-    for row in rows:
+    for idx, row in enumerate(rows, 1):
+        if idx % 10 == 0 or idx == 1 or idx == total_videos:
+            print(f"[{idx}/{total_videos}] Processing {row.get('unique_video_id') or row['video_id']}...")
         unique_id = row.get("unique_video_id") or row["video_id"]
         split = str(row["split"]).strip().lower()
         if split not in by_split:

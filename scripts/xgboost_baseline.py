@@ -21,8 +21,20 @@ import pathlib
 import joblib
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
-import seaborn as sns
+import os
+os.environ["MPLBACKEND"] = "Agg"
+try:
+    import matplotlib
+    matplotlib.use('Agg')
+    import matplotlib.pyplot as plt
+except Exception as e:
+    plt = None
+    print(f"Warning: matplotlib import failed ({e}); plots will be skipped.")
+try:
+    import seaborn as sns
+except Exception as e:
+    sns = None
+    print(f"Warning: seaborn import failed ({e}); seaborn plots will be skipped.")
 from sklearn.metrics import (
     accuracy_score,
     precision_score,

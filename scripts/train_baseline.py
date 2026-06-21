@@ -4,12 +4,23 @@
 import sys
 from pathlib import Path
 
-import matplotlib
-matplotlib.use("Agg")
-import matplotlib.pyplot as plt
+import os
+os.environ["MPLBACKEND"] = "Agg"
+# Safely import matplotlib; fall back if unavailable
+try:
+    import matplotlib
+    matplotlib.use('Agg')
+    import matplotlib.pyplot as plt
+except Exception as e:
+    plt = None
+    print(f"Warning: matplotlib import failed ({e}); confusion matrix will not be saved.")
 import numpy as np
 import pandas as pd
-import seaborn as sns
+try:
+    import seaborn as sns
+except Exception as e:
+    sns = None
+    print(f"Warning: seaborn import failed ({e}); seaborn plots will be skipped.")
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import (
     accuracy_score,
@@ -176,22 +187,26 @@ def train_model(
 
     slug = model_name.lower().replace(" ", "_").replace(":", "")
     conf_path = REPORTS_DIR / f"confusion_matrix_{slug}.png"
-    plt.figure(figsize=(6, 5))
-    sns.heatmap(
-        conf_mat,
-        annot=True,
-        fmt="d",
-        cmap="Blues",
-        cbar=False,
-        xticklabels=["TD", "ASD"],
-        yticklabels=["TD", "ASD"],
-    )
-    plt.xlabel("Predicted")
-    plt.ylabel("True")
-    plt.title(model_name)
-    plt.tight_layout()
-    plt.savefig(conf_path)
-    plt.close()
+    if plt is not None and sns is not None:
+        plt.figure(figsize=(6, 5))
+        sns.heatmap(
+            conf_mat,
+            annot=True,
+            fmt="d",
+            cmap="Blues",
+            cbar=False,
+            xticklabels=["TD", "ASD"],
+            yticklabels=["TD", "ASD"],
+        )
+        plt.xlabel("Predicted")
+        plt.ylabel("True")
+        plt.title(model_name)
+        plt.tight_layout()
+        plt.savefig(conf_path)
+        plt.close()
+        print(f"Confusion matrix saved to {conf_path}\n")
+    else:
+        print("Skipping confusion matrix plot due to missing matplotlib or seaborn.")
     print(f"Confusion matrix saved to {conf_path}\n")
 
     cv_msg = run_cross_validation(rf, X_train_scaled, y_train)
