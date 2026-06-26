@@ -1,0 +1,77 @@
+{% extends 'base.html' %}
+{% block title %}Patients{% endblock %}
+
+{% block header %}
+<h1 class="h3 mb-0 text-gray-800">Patients</h1>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between mb-3">
+  <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#patientModal" id="addPatientBtn">
+    <i class="bi bi-plus-lg"></i> Add Patient
+  </button>
+</div>
+
+<table class="table table-hover" id="patientsTable">
+  <thead class="table-light">
+    <tr>
+      <th>Patient ID</th>
+      <th>Name</th>
+      <th>Age</th>
+      <th>Gender</th>
+      <th>Guardian</th>
+      <th>Date Added</th>
+      <th>Actions</th>
+    </tr>
+  </thead>
+  <tbody>
+    <!-- Rows will be populated via JS -->
+  </tbody>
+</table>
+
+<!-- Patient Modal (Add/Edit) -->
+<div class="modal fade" id="patientModal" tabindex="-1" aria-labelledby="patientModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="patientModalLabel">Add Patient</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form id="patientForm">
+          <div class="mb-3">
+            <label for="patientName" class="form-label">Patient Name</label>
+            <input type="text" class="form-control" id="patientName" name="name" required>
+          </div>
+          <div class="mb-3">
+            <label for="patientAge" class="form-label">Age</label>
+            <input type="number" class="form-control" id="patientAge" name="age" required>
+          </div>
+          <div class="mb-3">
+            <label for="patientGender" class="form-label">Gender</label>
+            <select class="form-select" id="patientGender" name="gender" required>
+              <option value="">Select...</option>
+              <option>Male</option>
+              <option>Female</option>
+              <option>Other</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label for="patientGuardian" class="form-label">Guardian Name</label>
+            <input type="text" class="form-control" id="patientGuardian" name="guardian_name" required>
+          </div>
+          <div class="mb-3">
+            <label for="patientNotes" class="form-label">Notes</label>
+            <textarea class="form-control" id="patientNotes" name="notes" rows="3"></textarea>
+          </div>
+          <input type="hidden" id="patientId" name="id">
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="submit" class="btn btn-primary" id="savePatientBtn">Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

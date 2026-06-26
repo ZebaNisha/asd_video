@@ -18,6 +18,8 @@ from typing import List, Tuple
 
 import numpy as np
 import pandas as pd
+# Best epoch from the full‑dataset run (see child_vgg16_lstm_report.json)
+BEST_EPOCH = 30
 
 # Optional matplotlib import – plotting is skipped if unavailable.
 try:
@@ -49,7 +51,7 @@ def parse_args() -> argparse.Namespace:
         default="outputs/vgg16_lstm/subset_allsubjects_20videos",
         help="Directory containing vgg16_child_train.npz and vgg16_child_test.npz",
     )
-    parser.add_argument("--epochs", type=int, default=30)
+    parser.add_argument("--epochs", type=int, default=BEST_EPOCH)
     parser.add_argument("--batch-size", type=int, default=16)
     parser.add_argument("--hidden-dim", type=int, default=64)
     parser.add_argument("--dropout", type=float, default=0.5)
@@ -385,7 +387,8 @@ def main() -> None:
         json.dump(report, f, indent=2)
 
     # Save model checkpoint
-    model.save(data_dir / "child_vgg16_lstm", save_format="tf")
+    # Save model checkpoint in Keras 3 format (no save_format argument)
+    model.save(data_dir / "child_vgg16_lstm.keras")
 
     # Print concise summary for quick view
     print(json.dumps({"clip_test_metrics": report["clip_metrics"]["test"], "subject_test_metrics": subject_metrics_test}, indent=2))

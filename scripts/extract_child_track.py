@@ -145,13 +145,15 @@ def filter_tracks(stats, total_frames, min_fraction=0.5):
     return {tid: s for tid, s in stats.items() if s["duration_frames"] >= min_frames}
 
 
-def select_child(filtered_stats):
-    """Select the track with the smallest average area.
-    Returns ``track_id, stats``.
-    """
+def select_child(filtered_stats, stats):
     if not filtered_stats:
-        raise RuntimeError("No tracks remain after filtering; cannot select child.")
-    # min by avg_area
+        # If even after fallback no tracks remain, pick the track with the longest duration
+        if not stats:
+            raise RuntimeError("No tracking data available to select a child.")
+        # Choose track with maximum duration as a last‑resort heuristic
+        child_id = max(stats, key=lambda tid: stats[tid]["duration_frames"])
+        return child_id, stats[child_id]
+    # Normal case: pick the smallest average area
     child_id = min(filtered_stats, key=lambda tid: filtered_stats[tid]["avg_area"])
     return child_id, filtered_stats[child_id]
 
@@ -209,7 +211,14 @@ def main():
     tracks, total_frames = load_tracks(input_path)
     stats = compute_stats(tracks)
     filtered = filter_tracks(stats, total_frames, min_fraction=0.5)
-    child_id, child_stats = select_child(filtered)
+    if not filtered:
+        # Fall back to using all tracks (no duration filter) when none survive
+        filtered = stats
+        print("[WARN] No tracks passed the 50% duration filter; using all tracks for child selection.")
+    
+    # Select the child track
+    child_id, child_stats = select_child(filtered, stats)
+    
     # Derive a video identifier from the filename (e.g., Subj_2_part_62)
     video_id = input_path.stem.replace("_tracked", "")
     # Determine output path – if user supplied, use it; otherwise default to child_sequences folder

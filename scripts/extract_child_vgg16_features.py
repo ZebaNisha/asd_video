@@ -149,7 +149,7 @@ def save_split(out_dir: Path, split: str, samples: list[np.ndarray], labels: lis
 def main() -> None:
     args = parse_args()
     out_dir = Path(args.out_dir)
-    out_dir.mkdir(parents=True, exist_ok=True)
+    out_dir.mkdir(parents=True, exist_ok=True)  # Ensure output directory exists before loop
     report_path = out_dir / "vgg16_child_feature_report.csv"
 
     train_out = out_dir / "vgg16_child_train.npz"
@@ -191,14 +191,16 @@ def main() -> None:
             continue
 
         video_path = Path(row["dataset_path"])
+        # Ensure output directory exists once before processing
+        # (moved outside the loop, see earlier in main())
         features, length = extract_video_features(
-            video_path,
-            boxes,
-            args.max_frames,
-            args.crop_margin,
-            model,
-            preprocess_input,
-            args.batch_size,
+          video_path,
+          boxes,
+          args.max_frames,
+          args.crop_margin,
+          model,
+          preprocess_input,
+          args.batch_size,
         )
         if length == 0:
             report_rows.append({"unique_video_id": unique_id, "split": split, "status": "video_or_crop_failed", "length": 0})

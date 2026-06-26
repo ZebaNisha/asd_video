@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+{% block title %}Prediction Results{% endblock %}
+
+{% block content %}
+<div class="container py-5" data-job-id="{{ job.id }}" data-asd-prob="{{ job.asd_probability }}" data-td-prob="{{ job.td_probability }}">
+  <h2 class="mb-4">Prediction Results</h2>
+  <div class="card">
+    <div class="card-body">
+      <h4 class="card-title">Job ID: {{ job.id }}</h4>
+      <p class="card-text">
+        <strong>Label:</strong> {{ job.prediction_label }}<br>
+        <strong>ASD Probability:</strong> {{ (job.asd_probability * 100) | round(2) }}%<br>
+        <strong>TD Probability:</strong> {{ (job.td_probability * 100) | round(2) }}%<br>
+        <strong>Confidence:</strong> {{ (job.confidence_score * 100) | round(2) }}%<br>
+        <strong>Processing Time:</strong> {{ job.processing_time }} seconds<br>
+        <strong>Model Version:</strong> {{ job.model_version }}<br>
+        <strong>Raw Classification:</strong> {{ job.raw_classification }}
+      </p>
+      <canvas id="probabilityChart" class="my-4"></canvas>
+      <a href="{{ url_for('reports.reports', job_id=job.id) }}" class="btn btn-primary">View Report</a>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/prediction.js') }}" defer></script>
+{% endblock %}

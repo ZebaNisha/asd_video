@@ -1,19 +1,25 @@
 # Ignore processed videos and large outputs
 outputs/
+
 # Ignore dataset files
 features.csv
 dataset_stats.json
+
 # Ignore raw video data
 autism_data_anonymized/
+
 # Ignore model checkpoints
 models/
+
 # Ignore logs
 logs/
+
 # Ignore temporary files
 *.tmp
 *.log
 __pycache__/
 *.pyc
+
 # Ignore large media files
 *.mp4
 *.avi
@@ -26,3 +32,18 @@ reports/
 subject_predictions.csv
 scripts/debug.csv
 scripts/debug_test.csv
+
+# Ignore local sqlite databases and instances
+instance/
+*.db
+*.sqlite
+
+# Ignore dynamic user video uploads
+static/uploads/
+
+# Ignore large colab backup zip package
+asd_colab_package.zip
+
+# Ignore temporary testing directories
+temp_zip_test/
+tmp/

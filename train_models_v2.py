@@ -16,8 +16,13 @@ MODEL_DIR = r'c:/asd_project/models'
 
 # Load data
 df = pd.read_csv(FEATURE_CSV)
-X = df.drop(columns=['video_id', 'label', 'split', 'dataset_path'])
+X = df.drop(columns=['unique_video_id','video_id','label','split','dataset_path'])
+# Ensure all feature columns are numeric; non‑numeric entries become NaN for imputation
+X = X.apply(pd.to_numeric, errors='coerce')
 y = df['label']
+# Encode non‑numeric labels to integers for XGBoost
+if y.dtype.kind not in 'biufc':
+    y = y.astype('category').cat.codes
 
 # Train‑test split according to original split column
 train_idx = df['split'] == 'train'
@@ -46,9 +51,14 @@ for family_name, cols in FAMILIES.items():
     if not cols:
         continue
     # Scale features
+    # Impute missing values before scaling
+    from sklearn.impute import SimpleImputer
+    imputer = SimpleImputer(strategy='median')
+    X_train_imp = imputer.fit_transform(X_train[cols])
+    X_test_imp = imputer.transform(X_test[cols])
     scaler = StandardScaler()
-    X_train_f = scaler.fit_transform(X_train[cols])
-    X_test_f = scaler.transform(X_test[cols])
+    X_train_f = scaler.fit_transform(X_train_imp)
+    X_test_f = scaler.transform(X_test_imp)
 
     # ---- Logistic Regression baseline ----
     logreg = LogisticRegression(max_iter=1000, n_jobs=1)
@@ -97,12 +107,12 @@ for family_name, cols in FAMILIES.items():
         report_lines.append(f"- Accuracy: {acc:.4f}")
         report_lines.append(f"- Precision (weighted): {prec:.4f}")
         report_lines.append(f"- Recall (weighted): {rec:.4f}")
-        report_lines.append(f"- F1‑score (weighted): {f1:.4f}")
-        report_lines.append(f"- ROC‑AUC: {auc if isinstance(auc,float) else auc}")
+        report_lines.append(f"- F1-score (weighted): {f1:.4f}")
+        report_lines.append(f"- ROC-AUC: {auc if isinstance(auc,float) else auc}")
         report_lines.append(f"- Confusion Matrix:\n```\n{cm}\n```\n")
 
-# Write markdown report
-with open(REPORT_MD, 'w') as f:
+print(f"Report lines generated: {len(report_lines)}")
+with open(REPORT_MD, 'w', encoding='utf-8') as f:
     f.write('# Model Evaluation V2\n\n')
     f.write('\n'.join(report_lines))
 

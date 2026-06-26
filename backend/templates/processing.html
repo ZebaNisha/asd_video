@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+{% block title %}Processing Timeline{% endblock %}
+
+{% block content %}
+<div class='container py-4'>
+  <h2 class='mb-4'>Inference Processing</h2>
+  <div id='timeline' class='stepper stepper-vertical'>
+    <div class='stepper-item' id='step-queued'>
+      <div class='stepper-content'>
+        <h5>Queued</h5>
+        <p>Your job has been queued and will start shortly.</p>
+      </div>
+    </div>
+    <div class='stepper-item' id='step-processing' style='display:none;'>
+      <div class='stepper-content'>
+        <h5>Processing</h5>
+        <p>The video is being analyzed. This may take a few moments.</p>
+      </div>
+    </div>
+    <div class='stepper-item' id='step-completed' style='display:none;'>
+      <div class='stepper-content'>
+        <h5>Completed</h5>
+        <p>Inference finished. <a href='{{ url_for('prediction.prediction_page', job_id=job_id) }}' class='btn btn-primary mt-2'>View Results</a></p>
+      </div>
+    </div>
+    <div class='stepper-item' id='step-failed' style='display:none;'>
+      <div class='stepper-content'>
+        <h5>Failed</h5>
+        <p>There was an error processing your video. Please try again.</p>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+  document.body.dataset.jobId = "{{ job_id }}";
+</script>
+<script src='{{ url_for('static', filename='js/processing.js') }}' defer></script>
+{% endblock %}

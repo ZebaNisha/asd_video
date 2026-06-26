@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+{% block title %}Settings{% endblock %}
+
+{% block header %}
+<h1 class="h3 mb-0 text-gray-800">System Settings</h1>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <div class="row">
+    <div class="col-md-8">
+      <div class="card shadow mb-4">
+        <div class="card-header py-3">
+          <h6 class="m-0 font-weight-bold text-primary">Inference Configuration</h6>
+        </div>
+        <div class="card-body">
+          <form id="settingsForm">
+            <div class="mb-3">
+              <label for="modelVersion" class="form-label">Active Model Version</label>
+              <select class="form-select" id="modelVersion">
+                <option value="v1.0-stub" selected>v1.0-stub (Default)</option>
+                <option value="vgg16-lstm-v1">VGG16 + LSTM (Fine-tuned)</option>
+              </select>
+              <div class="form-text">Choose the underlying neural network model for autism classification.</div>
+            </div>
+            
+            <div class="mb-3">
+              <label for="confidenceThreshold" class="form-label">Classification Confidence Threshold</label>
+              <input type="range" class="form-range" min="50" max="100" value="70" id="confidenceThreshold">
+              <div class="d-flex justify-content-between text-muted small">
+                <span>50%</span>
+                <span id="thresholdVal">70%</span>
+                <span>100%</span>
+              </div>
+            </div>
+
+            <div class="mb-3 form-check form-switch">
+              <input class="form-check-input" type="checkbox" role="switch" id="optGpu" checked>
+              <label class="form-check-input-label" for="optGpu">Enable GPU Acceleration (CUDA)</label>
+            </div>
+
+            <button type="button" class="btn btn-primary" onclick="alert('Settings saved successfully!')">Save Configuration</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+  const slider = document.getElementById('confidenceThreshold');
+  const label = document.getElementById('thresholdVal');
+  slider.oninput = function() {
+    label.innerText = this.value + '%';
+  }
+</script>
+{% endblock %}

@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+{% block title %}Upload Analysis{% endblock %}
+{% block header %}<h1 class="h3 mb-0 text-gray-800">Upload Analysis</h1>{% endblock %}
+{% block content %}
+<div class="container py-4">
+  <form id="uploadForm" enctype="multipart/form-data" method="post" action="{{ url_for('upload.upload_video') }}">
+    <div class="row g-3">
+      <div class="col-md-4">
+        <h5>Patient Information</h5>
+        <div class="mb-2">
+          <label class="form-label" for="patientSelect">Select Patient</label>
+          <select class="form-select" id="patientSelect" name="patient_id" required>
+            <option value="" selected disabled>Choose...</option>
+            {% for p in patients %}
+            <option value="{{ p.id }}">{{ p.name }} ({{ p.age }})</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+      <div class="col-md-8">
+        <h5>Video Upload</h5>
+        <div class="mb-3">
+          <label class="form-label" for="videoFile">Video File</label>
+          <input class="form-control" type="file" id="videoFile" name="video" accept="video/*" required>
+        </div>
+        <button type="submit" class="btn btn-primary" id="startAnalysisBtn"><i class="bi bi-play-fill"></i> Start Analysis</button>
+      </div>
+    </div>
+  </form>
+</div>
+{% endblock %}

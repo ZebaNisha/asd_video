@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+{% block title %}Report{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  <h2 class="mb-4">Inference Report</h2>
+  <div class="card">
+    <div class="card-body">
+      <h4 class="card-title">Job ID: {{ job.id }}</h4>
+      <ul class="list-group list-group-flush">
+        <li class="list-group-item"><strong>Label:</strong> {{ job.prediction_label }}</li>
+        <li class="list-group-item"><strong>ASD Probability:</strong> {{ (job.asd_probability * 100) | round(2) }}%</li>
+        <li class="list-group-item"><strong>TD Probability:</strong> {{ (job.td_probability * 100) | round(2) }}%</li>
+        <li class="list-group-item"><strong>Confidence:</strong> {{ (job.confidence_score * 100) | round(2) }}%</li>
+        <li class="list-group-item"><strong>Processing Time:</strong> {{ job.processing_time }} s</li>
+        <li class="list-group-item"><strong>Model Version:</strong> {{ job.model_version }}</li>
+        <li class="list-group-item"><strong>Raw Classification:</strong> {{ job.raw_classification }}</li>
+        <li class="list-group-item"><strong>Created At:</strong> {{ job.created_at }}</li>
+        <li class="list-group-item"><strong>Updated At:</strong> {{ job.updated_at }}</li>
+      </ul>
+      <div class="mt-4">
+        <a href="{{ url_for('reports.download_report', job_id=job.id, fmt='csv') }}" class="btn btn-success mr-2">Download CSV</a>
+        <a href="{{ url_for('reports.download_report', job_id=job.id, fmt='json') }}" class="btn btn-outline-primary">Download JSON</a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

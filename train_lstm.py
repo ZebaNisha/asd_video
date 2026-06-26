@@ -15,7 +15,7 @@ print(f"Using device: {device}")
 # Paths
 CHILD_SEQ_DIR = r'c:/asd_project/outputs/child_sequences'
 BASELINE_CSV = r'c:/asd_project/outputs/features/features.csv'
-REPORT_MD = r'c:/asd_project/LSTM_EVALUATION.md'
+REPORT_MD = r'c:/asd_project/model_evaluation_v2.md'
 MODEL_DIR = r'c:/asd_project/models/lstm'
 
 class TrajectoryDataset(Dataset):

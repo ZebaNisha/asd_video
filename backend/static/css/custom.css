@@ -1,0 +1,60 @@
+/* custom.css - Modern premium UI */
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&family=Inter:wght@400;600;700&display=swap');
+
+:root {
+    /* Color palette */
+    --primary: #3B82F6; /* Indigo */
+    --primary-dark: #1E3A8A;
+    --success: #10B981; /* Emerald */
+    --warning: #F59E0B; /* Amber */
+    --danger: #EF4444;  /* Red */
+    --bg: #F5F7FA;     /* Light gray */
+    --card-bg: #FFFFFF;/* White */
+    --sidebar-bg: #1E293B; /* Dark slate */
+    --navbar-bg: #FFFFFF;
+    --text-color: #212529;
+    --border-radius: .5rem;
+    --transition: all .3s ease;
+}
+
+body {
+    background-color: var(--bg);
+    color: #212529;
+    font-family: "Inter", system-ui, sans-serif;
+}
+
+/* Sidebar styling */
+#sidebar {
+    background-color: var(--sidebar-bg);
+    color: #fff;
+    min-height: 100vh;
+    position: sticky;
+    top: 0;
+}
+#sidebar .nav-link {
+    color: #fff;
+}
+#sidebar .nav-link.active {
+    background-color: var(--primary);
+    border-radius: .25rem;
+}
+
+/* Card styling */
+.card.custom-card {
+    background-color: var(--card-bg);
+    border: none;
+    box-shadow: 0 1px 3px rgba(0,0,0,.1);
+}
+
+/* Toast positioning */
+.toast-container {
+    position: fixed;
+    top: 1rem;
+    right: 1rem;
+    z-index: 1055;
+}
+
+/* Progress bar theme */
+.progress-bar {
+    background-color: var(--primary);
+}

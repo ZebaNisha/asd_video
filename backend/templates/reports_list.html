@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+{% block title %}Medical Reports{% endblock %}
+
+{% block header %}
+<h1 class="h3 mb-0 text-gray-800">Inference Reports</h1>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <div class="card shadow mb-4">
+    <div class="card-header py-3">
+      <h6 class="m-0 font-weight-bold text-primary">Generated Clinical Reports</h6>
+    </div>
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table table-hover" id="reportsTable">
+          <thead class="table-light">
+            <tr>
+              <th>Report ID</th>
+              <th>Diagnosis</th>
+              <th>ASD Probability</th>
+              <th>TD Probability</th>
+              <th>Confidence</th>
+              <th>Date Generated</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for job in jobs %}
+            <tr>
+              <td><code>{{ job.id }}</code></td>
+              <td>
+                <span class="badge {% if job.prediction_label == 'ASD' %}bg-danger{% else %}bg-primary{% endif %}">
+                  {{ job.prediction_label }}
+                </span>
+              </td>
+              <td>{{ (job.asd_probability * 100) | round(1) }}%</td>
+              <td>{{ (job.td_probability * 100) | round(1) }}%</td>
+              <td>{{ (job.confidence_score * 100) | round(1) }}%</td>
+              <td>{{ job.updated_at.strftime('%Y-%m-%d %H:%M') if job.updated_at else '-' }}</td>
+              <td>
+                <a href="{{ url_for('reports.reports', job_id=job.id) }}" class="btn btn-sm btn-primary">Open Report</a>
+                <a href="{{ url_for('reports.download_report', job_id=job.id, fmt='csv') }}" class="btn btn-sm btn-outline-success">CSV</a>
+                <a href="{{ url_for('reports.download_report', job_id=job.id, fmt='json') }}" class="btn btn-sm btn-outline-primary">JSON</a>
+              </td>
+            </tr>
+            {% else %}
+            <tr>
+              <td colspan="7" class="text-center text-muted py-4">No completed reports found. Process a video to generate a report.</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

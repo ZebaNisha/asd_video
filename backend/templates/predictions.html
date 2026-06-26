@@ -1,0 +1,83 @@
+{% extends 'base.html' %}
+{% block title %}All Predictions{% endblock %}
+
+{% block header %}
+<h1 class="h3 mb-0 text-gray-800">Predictions</h1>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <div class="card shadow mb-4">
+    <div class="card-header py-3">
+      <h6 class="m-0 font-weight-bold text-primary">Analysis Prediction History</h6>
+    </div>
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table table-hover" id="predictionsTable">
+          <thead class="table-light">
+            <tr>
+              <th>Job ID</th>
+              <th>Status</th>
+              <th>Prediction</th>
+              <th>Confidence</th>
+              <th>Processing Time (s)</th>
+              <th>Model Version</th>
+              <th>Date Run</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for job in jobs %}
+            <tr>
+              <td><code>{{ job.id[:8] }}...</code></td>
+              <td>
+                {% if job.status == 'completed' %}
+                <span class="badge bg-success">Completed</span>
+                {% elif job.status == 'processing' %}
+                <span class="badge bg-warning text-dark">Processing</span>
+                {% elif job.status == 'queued' %}
+                <span class="badge bg-secondary">Queued</span>
+                {% else %}
+                <span class="badge bg-danger">Failed</span>
+                {% endif %}
+              </td>
+              <td>
+                {% if job.status == 'completed' %}
+                <span class="badge {% if job.prediction_label == 'ASD' %}bg-danger{% else %}bg-primary{% endif %}">
+                  {{ job.prediction_label }}
+                </span>
+                {% else %}
+                -
+                {% endif %}
+              </td>
+              <td>
+                {% if job.status == 'completed' %}
+                {{ (job.confidence_score * 100) | round(1) }}%
+                {% else %}
+                -
+                {% endif %}
+              </td>
+              <td>{{ job.processing_time if job.processing_time else '-' }}</td>
+              <td>{{ job.model_version if job.model_version else '-' }}</td>
+              <td>{{ job.created_at.strftime('%Y-%m-%d %H:%M') if job.created_at else '-' }}</td>
+              <td>
+                {% if job.status == 'completed' %}
+                <a href="{{ url_for('prediction.prediction_page', job_id=job.id) }}" class="btn btn-sm btn-outline-primary">View Results</a>
+                <a href="{{ url_for('reports.reports', job_id=job.id) }}" class="btn btn-sm btn-outline-secondary">View Report</a>
+                {% else %}
+                <span class="text-muted">-</span>
+                {% endif %}
+              </td>
+            </tr>
+            {% else %}
+            <tr>
+              <td colspan="8" class="text-center text-muted py-4">No prediction runs found. Go to <a href="{{ url_for('upload') }}">Upload</a> to start.</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

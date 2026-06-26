@@ -51,7 +51,7 @@ var_stats = {
 
 # Model parameter count (load SavedModel)
 import tensorflow as tf
-model_path = base_dir / 'outputs/vgg16_lstm/subset_allsubjects_20videos/child_vgg16_lstm'
+model_path = base_dir / 'outputs/vgg16_lstm/subset_allsubjects_20videos/child_vgg16_lstm.keras'
 model = tf.keras.models.load_model(model_path)
 trainable_params = sum([np.prod(v.shape) for v in model.trainable_variables])
 
@@ -76,7 +76,7 @@ analysis = {
 }
 
 # Write JSON
-with report_json.open('w') as f:
+with report_json.open('w', encoding='utf-8') as f:
     json.dump(analysis, f, indent=2)
 
 # Write Markdown report
@@ -118,7 +118,7 @@ md = f"""# BiLSTM Detailed Metric Analysis
 ---
 *The official final test results are the **clip‑level test metrics** and **subject‑level test metrics** shown above.*
 """
-with report_md.open('w') as f:
+with report_md.open('w', encoding='utf-8') as f:
     f.write(md)
 
 print('Analysis completed')

@@ -1,10 +1,3 @@
-import pathlib, subprocess, sys
-
-project_root = pathlib.Path('c:/asd_project')
-tracked_dir = project_root / 'outputs' / 'tracked'
-detections_dir = project_root / 'outputs' / 'detections'
-out_dir = project_root / 'outputs' / 'child_sequences'
-out_dir.mkdir(parents=True, exist_ok=True)
 
 # Build set of detection base names (without _detections)
 detected = {p.stem.replace('_detections', '') for p in detections_dir.glob('*_detections.csv')}
