@@ -94,5 +94,20 @@ def create_app(test_config=None):
     # ------------------------------------------------------------------
     with app.app_context():
         db.create_all()
+        try:
+            from .models.user import User
+            from .extensions.bcrypt import bcrypt
+            if User.query.first() is None:
+                password_hash = bcrypt.generate_password_hash("password123").decode('utf-8')
+                doctor = User(
+                    username="doctor",
+                    email="doctor@hospital.org",
+                    password_hash=password_hash
+                )
+                db.session.add(doctor)
+                db.session.commit()
+                app.logger.info("Database auto-seeded: Created default clinician 'doctor@hospital.org' with password 'password123'")
+        except Exception as e:
+            app.logger.error(f"Error seeding database: {e}")
 
     return app

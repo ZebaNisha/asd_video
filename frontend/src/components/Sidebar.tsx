@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { FiHome, FiList, FiFileText, FiSettings, FiMoon, FiSun, FiMenu, FiLogOut } from 'react-icons/fi';
+import { FiHome, FiList, FiFileText, FiSettings, FiMoon, FiSun, FiMenu, FiLogOut, FiUser } from 'react-icons/fi';
 import './Sidebar.css';
 
 interface SidebarProps {
@@ -17,6 +17,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle, toggleDark, 
     { to: '/history', label: 'History', icon: <FiList /> },
     { to: '/reports', label: 'Reports', icon: <FiFileText /> },
     { to: '/settings', label: 'Settings', icon: <FiSettings /> },
+    { to: '/profile', label: 'Profile', icon: <FiUser /> },
   ];
 
   const handleLogout = () => {

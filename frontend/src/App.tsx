@@ -9,10 +9,11 @@ import History from './pages/History';
 import { Reports } from './pages/Reports';
 import Settings from './pages/Settings';
 import Instructions from './pages/Instructions';
+import Profile from './pages/Profile';
 
 const App: React.FC = () => (
   <AppProvider>
-    <Router>
+    <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
@@ -21,6 +22,7 @@ const App: React.FC = () => (
             <Route path="reports" element={<Reports />} />
             <Route path="instructions" element={<Instructions/>} />
             <Route path="settings" element={<Settings />} />
+            <Route path="profile" element={<Profile />} />
           </Route>
         </Routes>
     </Router>

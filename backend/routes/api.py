@@ -51,3 +51,15 @@ def update_settings():
     data = request.get_json() or {}
     updated = update_config(data)
     return jsonify({"status": "ok", "updated": updated})
+
+@api_bp.route('/profile', methods=['GET'])
+def get_profile():
+    """Return JSON metadata about the default clinician user."""
+    return jsonify({
+        "username": "doctor",
+        "email": "doctor@hospital.org",
+        "role": "Lead Clinical Specialist",
+        "department": "Pediatric Neurology",
+        "hospital": "Children's Health Medical Center",
+        "clinicalId": "CLINIC-9428-ASD"
+    })

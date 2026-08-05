@@ -7,7 +7,7 @@ and ensures that the required directories exist at import time.
 from pathlib import Path
 
 # Root of the project
-PROJECT_ROOT = Path(r"c:/asd_project")
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
 
 # Top‑level directories
 SCRIPTS_DIR = PROJECT_ROOT / "scripts"

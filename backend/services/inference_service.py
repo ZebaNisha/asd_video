@@ -57,11 +57,16 @@ def predict(video_path: str) -> Dict[str, Any]:
     output_dir = project_root / "outputs" / "inference" / video_name
     output_dir.mkdir(parents=True, exist_ok=True)
     
+    from ..settings import get_config
+    config = get_config()
+    model_type = config.get("modelType", "vgg16_bilstm_v2")
+    
     cmd = [
         sys.executable,
         str(predict_script),
         "--video", str(video_path),
-        "--output-dir", str(output_dir)
+        "--output-dir", str(output_dir),
+        "--model-type", model_type
     ]
     
     # Run the end-to-end inference script
@@ -85,12 +90,10 @@ def predict(video_path: str) -> Dict[str, Any]:
     elapsed = round(time.time() - start, 3)
     
     # Map the prediction.json schema to the raw result expected by _normalise_result
-    from ..settings import get_config
-    # ... existing lines unchanged ...
     raw_output = {
         "asd_probability": pred_data.get("raw_activation", 0.0),
         "classification": pred_data.get("prediction", "unknown"),
-        "model_version": get_config().get("modelType", "vgg16+lstm-v1.0")
+        "model_version": pred_data.get("model_version", model_type)
     }
     
     normalized = _normalise_result(raw_output)

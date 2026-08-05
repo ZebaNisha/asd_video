@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { FiCheck, FiPlay, FiClock, FiTerminal, FiChevronDown, FiChevronUp } from 'react-icons/fi';
+import { api } from '../api';
 
 interface PipelineStepperProps {
   status: string | null;
@@ -17,6 +18,21 @@ export const PipelineStepper: React.FC<PipelineStepperProps> = ({ status, jobId 
   const [elapsedTime, setElapsedTime] = useState(0);
   const [logsExpanded, setLogsExpanded] = useState(true);
   const [currentStep, setCurrentStep] = useState(0);
+  const [modelType, setModelType] = useState('vgg16_bilstm_v2');
+
+  useEffect(() => {
+    const getModelSetting = async () => {
+      try {
+        const settings = await api.fetchSettings();
+        if (settings && settings.modelType) {
+          setModelType(settings.modelType);
+        }
+      } catch (err) {
+        console.error("Failed to load settings in stepper", err);
+      }
+    };
+    getModelSetting();
+  }, [jobId, status]);
 
   // Dynamic simulation of intermediate steps to show progress when backend is 'processing'
   useEffect(() => {
@@ -63,81 +79,106 @@ export const PipelineStepper: React.FC<PipelineStepperProps> = ({ status, jobId 
     return () => clearInterval(timer);
   }, [status]);
 
-  const pipelineSteps: StepDetails[] = useMemo(() => [
-    {
-      id: 1,
-      label: 'Upload',
-      desc: 'Transmitting video data to secure HIPAA-compliant cloud storage',
-      logs: [
-        '[INFO] Connecting to streaming gateway...',
-        '[INFO] File authorization token validated.',
-        `[INFO] Video upload initialized. File ID: ${jobId || 'N/A'}`,
-        '[INFO] Video package fully received. Status: OK'
-      ]
-    },
-    {
-      id: 2,
-      label: 'Stickman Generation',
-      desc: 'Executing custom pipeline to generate coordinate arrays',
-      logs: [
-        '[INFO] Initializing stickmen.py model instance.',
-        '[INFO] Processing raw video frames... (30fps sequence)',
-        '[INFO] Tracking joints and rendering stickman outputs.',
-        '[INFO] Stickman coordinate stream generated.'
-      ]
-    },
-    {
-      id: 3,
-      label: 'Skeleton Detection',
-      desc: 'Localizing 2D coordinate positions for joints and face landmarks',
-      logs: [
-        '[INFO] Loading pose landmarker model configurations.',
-        '[INFO] Detecting 2D keypoints... (33 skeleton vertices)',
-        '[INFO] Isolating joint angles (knees, hips, elbows, shoulders).'
-      ]
-    },
-    {
-      id: 4,
-      label: 'Child Tracking',
-      desc: 'Bounding box isolation to filter parent/examiner joints',
-      logs: [
-        '[INFO] Running child localization bounding box.',
-        '[INFO] Filtering out coordinate arrays belonging to adults.',
-        '[INFO] Child coordinate crop successful. Sequence isolated.'
-      ]
-    },
-    {
-      id: 5,
-      label: 'Feature Extraction',
-      desc: 'Mapping coordinate frames to deep visual features using VGG16',
-      logs: [
-        '[INFO] Loading frozen weights from VGG16 ImageNet model.',
-        '[INFO] Extracting dense feature representations for frame sequences.',
-        '[INFO] VGG16 visual feature tensors compiled. Shape: (120, 4096)'
-      ]
-    },
-    {
-      id: 6,
-      label: 'Bi-LSTM Prediction',
-      desc: 'Evaluating sequential feature arrays in Bidirectional LSTM classifier',
-      logs: [
-        '[INFO] Initializing Bidirectional LSTM recurrent classifier.',
+  const pipelineSteps: StepDetails[] = useMemo(() => {
+    let step6Label = 'Bi-LSTM Prediction';
+    let step6Desc = 'Evaluating sequential feature arrays in Bidirectional LSTM classifier';
+    let step6Logs = [
+      '[INFO] Initializing Bidirectional LSTM recurrent classifier.',
+      '[INFO] Model hyperparameters: Hidden Dimensions = 128, Dropout = 0.3',
+      '[INFO] Forward and backward temporal paths evaluated.',
+      '[INFO] Sigmoid output layer mapped to ASD/TD probability distribution.'
+    ];
+
+    if (modelType === 'vgg16_lstm_v1') {
+      step6Label = 'Standard LSTM Prediction';
+      step6Desc = 'Evaluating sequential feature arrays in Standard LSTM classifier';
+      step6Logs = [
+        '[INFO] Initializing Standard LSTM recurrent classifier.',
         '[INFO] Model hyperparameters: Hidden Dimensions = 128, Dropout = 0.3',
-        '[INFO] Forward and backward temporal paths evaluated.',
+        '[INFO] Sequential temporal paths evaluated.',
         '[INFO] Sigmoid output layer mapped to ASD/TD probability distribution.'
-      ]
-    },
-    {
-      id: 7,
-      label: 'Report',
-      desc: 'Generating diagnosis report with confidence metrics and logs',
-      logs: [
-        '[INFO] Assembling diagnostic results JSON schema.',
-        '[INFO] Creating export templates (PDF / CSV formats).',
-        '[INFO] Diagnosis successfully recorded in local DB.'
-      ]
+      ];
+    } else if (modelType === 'openpose_gcn_legacy') {
+      step6Label = 'OpenPose GCN Prediction';
+      step6Desc = 'Evaluating skeletal features in Graph Convolutional Network';
+      step6Logs = [
+        '[INFO] Initializing GCN spatial-temporal classifier.',
+        '[INFO] Graph connectivity convolution layers evaluated.',
+        '[INFO] Mapping skeletal nodes to diagnostic distribution.'
+      ];
     }
-  ], [jobId]);
+
+    return [
+      {
+        id: 1,
+        label: 'Upload',
+        desc: 'Transmitting video data to secure HIPAA-compliant cloud storage',
+        logs: [
+          '[INFO] Connecting to streaming gateway...',
+          '[INFO] File authorization token validated.',
+          `[INFO] Video upload initialized. File ID: ${jobId || 'N/A'}`,
+          '[INFO] Video package fully received. Status: OK'
+        ]
+      },
+      {
+        id: 2,
+        label: 'Stickman Generation',
+        desc: 'Executing custom pipeline to generate coordinate arrays',
+        logs: [
+          '[INFO] Initializing stickmen.py model instance.',
+          '[INFO] Processing raw video frames... (30fps sequence)',
+          '[INFO] Tracking joints and rendering stickman outputs.',
+          '[INFO] Stickman coordinate stream generated.'
+        ]
+      },
+      {
+        id: 3,
+        label: 'Skeleton Detection',
+        desc: 'Localizing 2D coordinate positions for joints and face landmarks',
+        logs: [
+          '[INFO] Loading pose landmarker model configurations.',
+          '[INFO] Detecting 2D keypoints... (33 skeleton vertices)',
+          '[INFO] Isolating joint angles (knees, hips, elbows, shoulders).'
+        ]
+      },
+      {
+        id: 4,
+        label: 'Child Tracking',
+        desc: 'Bounding box isolation to filter parent/examiner joints',
+        logs: [
+          '[INFO] Running child localization bounding box.',
+          '[INFO] Filtering out coordinate arrays belonging to adults.',
+          '[INFO] Child coordinate crop successful. Sequence isolated.'
+        ]
+      },
+      {
+        id: 5,
+        label: 'Feature Extraction',
+        desc: 'Mapping coordinate frames to deep visual features using VGG16',
+        logs: [
+          '[INFO] Loading frozen weights from VGG16 ImageNet model.',
+          '[INFO] Extracting dense feature representations for frame sequences.',
+          '[INFO] VGG16 visual feature tensors compiled. Shape: (120, 4096)'
+        ]
+      },
+      {
+        id: 6,
+        label: step6Label,
+        desc: step6Desc,
+        logs: step6Logs
+      },
+      {
+        id: 7,
+        label: 'Report',
+        desc: 'Generating diagnosis report with confidence metrics and logs',
+        logs: [
+          '[INFO] Assembling diagnostic results JSON schema.',
+          '[INFO] Creating export templates (PDF / CSV formats).',
+          '[INFO] Diagnosis successfully recorded in local DB.'
+        ]
+      }
+    ];
+  }, [jobId, modelType]);
 
   // Aggregate logs to show in console based on current progress
   const visibleLogs = useMemo(() => {

@@ -1,18 +1,27 @@
-import argparse
-import cv2
-import mediapipe as mp
-
+import os
+import urllib.request
+from pathlib import Path
 
 def main():
+    project_root = Path(__file__).resolve().parent.parent
+    default_model_path = str(project_root / "pose_landmarker_lite.task")
+
     parser = argparse.ArgumentParser(description='Generate stickman video from raw video')
     parser.add_argument('--input', required=True, help='Path to input video')
     parser.add_argument('--output', required=True, help='Path to output stickman video')
-    parser.add_argument('--model', default=r'c:/asd_project/pose_landmarker_lite.task', help='Path to MediaPipe pose model')
+    parser.add_argument('--model', default=default_model_path, help='Path to MediaPipe pose model')
     args = parser.parse_args()
 
     INPUT_VIDEO = args.input
     OUTPUT_VIDEO = args.output
     MODEL_PATH = args.model
+
+    if not Path(MODEL_PATH).is_file():
+        model_url = "https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/latest/pose_landmarker_lite.task"
+        print(f"Model not found at {MODEL_PATH}. Auto-downloading MediaPipe model from Google storage...")
+        Path(MODEL_PATH).parent.mkdir(parents=True, exist_ok=True)
+        urllib.request.urlretrieve(model_url, MODEL_PATH)
+        print("Model downloaded successfully.")
 
     # Mediapipe tasks API imports
     from mediapipe.tasks import python as mp_tasks

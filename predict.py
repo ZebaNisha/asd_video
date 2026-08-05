@@ -2,18 +2,18 @@
 """
 ASD Video Inference Pipeline
 =============================
-Processes an anonymized OpenPose stickman video end‑to‑end and outputs predictions:
+Processes an anonymized OpenPose stickman video end-to-end and outputs predictions:
 1. Preprocessing (Skeleton detection, Tracking, Child selection, Sequence extraction)
-2. Feature extraction (Crops from original video, pre‑trained VGG16 features)
+2. Feature extraction (Crops from original video, pre-trained VGG16 features)
 3. Standardisation (Using cached training set stats)
-4. Model Loading (Backwards‑compatible Keras 2 loader for Keras 3 weights)
+4. Model Loading (Backwards-compatible Keras 2 loader for Keras 3 weights)
 5. Inference (Bidirectional LSTM prediction)
 
 Usage:
     python predict.py --video path/to/video.mp4 [options]
 
-Added options allow you to loosen the child‑selection thresholds (useful when the tracker
-fails on a new video) and to increase the centroid‑tracker tolerance.
+Added options allow you to loosen the child-selection thresholds (useful when the tracker
+fails on a new video) and to increase the centroid-tracker tolerance.
 """
 
 import json
@@ -108,41 +108,76 @@ def get_training_scaling_stats(train_npz_path: Path, cache_path: Path, logger: I
 
 
 def build_reconstructed_model(weights_zip_path: Path) -> Any:
-    """Recreate the Bi‑LSTM architecture and load weights from the Keras 3 zip archive."""
+    """Recreate the LSTM / Bi‑LSTM architecture and load weights from the Keras 3 zip archive."""
     import tensorflow as tf
     from tensorflow.keras import layers, models, regularizers
     import h5py
+    import zipfile
+    import tempfile
+    import os
 
-    l2_val = 1e-4
-    reg = regularizers.l2(l2_val)
-    lstm = layers.Bidirectional(
-        layers.LSTM(64, dropout=0.5, recurrent_dropout=0.2, kernel_regularizer=reg, recurrent_regularizer=reg)
-    )
-    model = models.Sequential([
-        layers.Input(shape=(30, 512)),
-        layers.Masking(mask_value=0.0),
-        lstm,
-        layers.Dense(64, activation='relu', kernel_regularizer=reg),
-        layers.Dropout(0.5),
-        layers.Dense(1, activation='sigmoid')
-    ])
-    model(np.zeros((1, 30, 512), dtype=np.float32))
     with zipfile.ZipFile(weights_zip_path) as zipf:
         temp_dir = tempfile.gettempdir()
         weights_path = os.path.join(temp_dir, 'model.weights.h5')
         with open(weights_path, 'wb') as f_out:
             f_out.write(zipf.read('model.weights.h5'))
+
     f_h5 = h5py.File(weights_path, 'r')
     try:
-        bidi_weights = [
-            np.array(f_h5['layers/bidirectional/forward_layer/cell/vars/0']),
-            np.array(f_h5['layers/bidirectional/forward_layer/cell/vars/1']),
-            np.array(f_h5['layers/bidirectional/forward_layer/cell/vars/2']),
-            np.array(f_h5['layers/bidirectional/backward_layer/cell/vars/0']),
-            np.array(f_h5['layers/bidirectional/backward_layer/cell/vars/1']),
-            np.array(f_h5['layers/bidirectional/backward_layer/cell/vars/2'])
-        ]
-        model.layers[1].set_weights(bidi_weights)
+        # Check if weights contain 'bidirectional' layer path
+        is_bidi = False
+        def check_key(name):
+            nonlocal is_bidi
+            if 'bidirectional' in name:
+                is_bidi = True
+        f_h5.visit(check_key)
+
+        l2_val = 1e-4
+        reg = regularizers.l2(l2_val)
+
+        if is_bidi:
+            # vars/0 shape is (input_dim, 4*units) -> units = shape[1] // 4
+            kernel_shape = f_h5['layers/bidirectional/forward_layer/cell/vars/0'].shape
+            lstm_units = kernel_shape[1] // 4
+            lstm_layer = layers.Bidirectional(
+                layers.LSTM(lstm_units, dropout=0.5, recurrent_dropout=0.2, kernel_regularizer=reg, recurrent_regularizer=reg)
+            )
+        else:
+            # vars/0 shape is (input_dim, 4*units) -> units = shape[1] // 4
+            kernel_shape = f_h5['layers/lstm/cell/vars/0'].shape
+            lstm_units = kernel_shape[1] // 4
+            lstm_layer = layers.LSTM(
+                lstm_units, dropout=0.5, recurrent_dropout=0.2, kernel_regularizer=reg, recurrent_regularizer=reg
+            )
+
+        model = models.Sequential([
+            layers.Input(shape=(30, 512)),
+            layers.Masking(mask_value=0.0),
+            lstm_layer,
+            layers.Dense(64, activation='relu', kernel_regularizer=reg),
+            layers.Dropout(0.5),
+            layers.Dense(1, activation='sigmoid')
+        ])
+        model(np.zeros((1, 30, 512), dtype=np.float32))
+
+        if is_bidi:
+            bidi_weights = [
+                np.array(f_h5['layers/bidirectional/forward_layer/cell/vars/0']),
+                np.array(f_h5['layers/bidirectional/forward_layer/cell/vars/1']),
+                np.array(f_h5['layers/bidirectional/forward_layer/cell/vars/2']),
+                np.array(f_h5['layers/bidirectional/backward_layer/cell/vars/0']),
+                np.array(f_h5['layers/bidirectional/backward_layer/cell/vars/1']),
+                np.array(f_h5['layers/bidirectional/backward_layer/cell/vars/2'])
+            ]
+            model.layers[1].set_weights(bidi_weights)
+        else:
+            lstm_weights = [
+                np.array(f_h5['layers/lstm/cell/vars/0']),
+                np.array(f_h5['layers/lstm/cell/vars/1']),
+                np.array(f_h5['layers/lstm/cell/vars/2'])
+            ]
+            model.layers[1].set_weights(lstm_weights)
+
         dense_w = [np.array(f_h5['layers/dense/vars/0']), np.array(f_h5['layers/dense/vars/1'])]
         model.layers[2].set_weights(dense_w)
         dense1_w = [np.array(f_h5['layers/dense_1/vars/0']), np.array(f_h5['layers/dense_1/vars/1'])]
@@ -157,38 +192,62 @@ def build_reconstructed_model(weights_zip_path: Path) -> Any:
 
 
 def fallback_child_report(detections_csv: Path, child_report_csv: Path, logger: InferenceLogger) -> None:
-    """If the child report contains only zero‑area boxes, copy the first detection row.
+    """If the child report contains only zero‑area boxes, create a fallback child report.
     This provides a crude fallback when the child‑selection filter is too strict.
     """
     df_child = pd.read_csv(child_report_csv)
-    # Guard against missing 'bbox_area' column (new child_report format)
-    if 'bbox_area' not in df_child.columns or (df_child['bbox_area'] == 0).all():
-        logger.info("Child report missing 'bbox_area' or contains only zero‑area boxes – applying fallback using first detection.")
+    # The child report generated by extract_child_track.py has 'avg_area' column
+    if 'avg_area' not in df_child.columns or (df_child['avg_area'] == 0).all():
+        logger.info("Child report missing 'avg_area' or contains only zero‑area boxes – applying fallback using first detection.")
         df_det = pd.read_csv(detections_csv)
         if df_det.empty:
             logger.error("Detections CSV empty – cannot fallback.")
             return
         first_valid = df_det[df_det['bbox_area'] > 0].head(1)
         if not first_valid.empty:
-            first_valid.to_csv(child_report_csv, index=False)
-            logger.info("Fallback child report written using first valid detection.")
+            # Find the most frequent track ID from tracked_csv if available
+            track_id = 0
+            tracked_path = child_report_csv.parent / child_report_csv.name.replace('_child_report.csv', '_tracked.csv')
+            if tracked_path.is_file():
+                try:
+                    df_tracked = pd.read_csv(tracked_path, header=None)
+                    if not df_tracked.empty and len(df_tracked.columns) >= 2:
+                        track_id = int(df_tracked[1].mode().iloc[0])
+                except Exception:
+                    pass
+            
+            row_det = first_valid.iloc[0]
+            fallback_df = pd.DataFrame([{
+                'video_id': row_det.get('video_id', detections_csv.stem.replace('_detections', '')),
+                'child_track_id': track_id,
+                'avg_area': float(row_det['bbox_area']),
+                'duration_frames': 1,
+                'selection_reason': "Fallback using first valid detection"
+            }])
+            fallback_df.to_csv(child_report_csv, index=False)
+            logger.info(f"Fallback child report written (track_id={track_id}) using first valid detection.")
         else:
             logger.error("No valid detection with non‑zero bbox for fallback.")
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Run end‑to‑end ASD inference on a video.")
+    parser = argparse.ArgumentParser(description="Run end-to-end ASD inference on a video.")
     parser.add_argument("--video", required=True, help="Path to input video (.mp4)")
     parser.add_argument("--output-dir", help="Directory to store pipeline artefacts")
     parser.add_argument("--min-bbox-area", type=float, default=0.0, help="Minimum bbox area for child selection (default 0)")
     parser.add_argument("--min-conf", type=float, default=0.0, help="Minimum OpenPose confidence for child selection (default 0)")
-    parser.add_argument("--max-distance", type=int, default=150, help="Centroid‑tracker max_distance")
-    parser.add_argument("--max-disappeared", type=int, default=10, help="Centroid‑tracker max_disappeared")
+    parser.add_argument("--max-distance", type=int, default=150, help="Centroid-tracker max_distance")
+    parser.add_argument("--max-disappeared", type=int, default=10, help="Centroid-tracker max_disappeared")
+    parser.add_argument("--model-type", default="vgg16_bilstm_v2", help="Model version to use")
     args = parser.parse_args()
 
     video_path = Path(args.video).resolve()
     if not video_path.is_file():
         print(f"Error: video not found at {video_path}")
+        sys.exit(1)
+    # Guard: ensure the video file is not empty (zero‑byte)
+    if video_path.stat().st_size == 0:
+        print(f"Error: video file is empty: {video_path}")
         sys.exit(1)
     video_name = video_path.stem
     output_dir = Path(args.output_dir).resolve() if args.output_dir else PROJECT_ROOT / "outputs" / "inference" / video_name
@@ -304,11 +363,21 @@ def main():
     # 4. Load model
     logger.info("[4/5] Loading model…")
     try:
-        model_path = PROJECT_ROOT / "outputs" / "vgg16_lstm" / "subset_allsubjects_20videos" / "child_vgg16_lstm.keras"
+        model_type = args.model_type
+        logger.info(f"Selected model type: {model_type}")
+        if model_type == "vgg16_bilstm_v2":
+            model_path = PROJECT_ROOT / "outputs" / "vgg16_lstm" / "subset_allsubjects_20videos" / "child_vgg16_lstm.keras"
+        elif model_type == "vgg16_lstm_v1":
+            model_path = PROJECT_ROOT / "outputs" / "vgg16_lstm" / "subset_5subjects" / "child_vgg16_lstm.keras"
+        elif model_type == "openpose_gcn_legacy":
+            model_path = PROJECT_ROOT / "outputs" / "vgg16_lstm" / "subset_2subjects_30videos" / "child_vgg16_lstm.keras"
+        else:
+            model_path = PROJECT_ROOT / "outputs" / "vgg16_lstm" / "subset_allsubjects_20videos" / "child_vgg16_lstm.keras"
+
         if not model_path.is_file():
-            raise FileNotFoundError(f"Model not found at {model_path}")
+            raise FileNotFoundError(f"Model file not found at {model_path}")
         model = build_reconstructed_model(model_path)
-        logger.info("Model loaded.")
+        logger.info(f"Model loaded from {model_path.name}")
     except Exception as e:
         logger.error(f"Model load error: {e}")
         fail_gracefully(output_dir, f"Model loading failed: {e}", logger)
@@ -331,6 +400,7 @@ def main():
             "raw_activation": pred_prob,
             "sequence_length": length,
             "status": "success",
+            "model_version": model_type,
             "error_message": None
         }
         pred_json = output_dir / "prediction.json"

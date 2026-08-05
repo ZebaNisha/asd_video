@@ -8,7 +8,7 @@ interface TopNavProps {
 
 export const TopNav: React.FC<TopNavProps> = ({ darkMode, toggleDarkMode }) => {
   return (
-    <header 
+    <header
       className="glass-panel flex items-center justify-between px-6 py-3 rounded-xl shadow-md z-40"
       style={{
         margin: '16px 16px 0 16px',
@@ -18,7 +18,7 @@ export const TopNav: React.FC<TopNavProps> = ({ darkMode, toggleDarkMode }) => {
     >
       {/* Brand Name */}
       <div className="text-xl md:text-2xl font-extrabold text-primary tracking-tight">
-        ASD Detector
+        ASD Doctor
       </div>
 
       {/* Modern Search Bar */}

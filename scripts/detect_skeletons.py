@@ -41,6 +41,15 @@ def main():
     if not video_path.is_file():
         raise FileNotFoundError(f"Input video not found: {video_path}")
 
+    model_path = Path(args.model)
+    if not model_path.is_file():
+        import urllib.request
+        model_url = "https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/latest/pose_landmarker_lite.task"
+        print(f"Model not found at {model_path}. Auto-downloading MediaPipe model...")
+        model_path.parent.mkdir(parents=True, exist_ok=True)
+        urllib.request.urlretrieve(model_url, str(model_path))
+        print("Model downloaded successfully.")
+
 
     # Determine output paths
     csv_path = Path(args.csv) if args.csv else video_path.with_name(f"{video_path.stem}_detections.csv")
